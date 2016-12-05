@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 import json
 import re
+import sqlite3
 
 import transaction as Transaction
 
@@ -23,6 +24,7 @@ class Blackmarket:
 
 	def __init__(self):
 		self.last_updated = datetime.now().timestamp()
+		self.db = sqlite3.connect('blackmarket.db')
 
 	def fetch(self):
 		while True:
@@ -43,5 +45,24 @@ class Blackmarket:
 			new_time = data[-1].timestamp
 		data = [x for x in data if x.timestamp > self.last_updated]
 		self.last_updated = new_time
+
+		for item in data:
+			self.addItemToDB(item.item_id, item.name)
 		return data
 
+	def addItemToDB(self, item_id, name):
+		cursor = self.db.cursor()
+		cmd = """BEGIN
+					IF NOT EXISTS (SELECT * FROM Items WHERE Id={0})
+					BEGIN
+						INSERT INTO Items VALUES ({0}, '{1}')
+					END
+				END""".format(item_id, name)
+		cursor.execute(cmd)
+		self.db.commit()
+
+	def getItemById(self, item_id):
+		curosr = self.db.cursor()
+		cmd = "SELECT * FROM Items WHERE ID={0}".format(item_id)
+		cursor.execute(cmd)
+		return cursor.fetchone()

@@ -6,6 +6,5 @@ bm = Blackmarket.Blackmarket()
 
 while True:
 	for item in bm.fetch():
-		if item.type != 'cancelled':
-			print (item.name, item.price)
+		print (item.name, item.item_id)
 	time.sleep(1)
