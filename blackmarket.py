@@ -25,14 +25,23 @@ class Blackmarket:
 		self.last_updated = datetime.now().timestamp()
 
 	def fetch(self):
-		res = requests.get(Blackmarket.maview_url + '/Now/GetMessageMarket', \
-							data = {'_': str(int(self.last_updated * 1000))}, \
-							headers = Blackmarket.headers)
-		data = res.content.decode('utf-8')
+		while True:
+			try:
+				res = requests.get(Blackmarket.maview_url + '/Now/GetMessageMarket', \
+									data = {'_': str(int(self.last_updated * 1000))}, \
+									headers = Blackmarket.headers, \
+									timeout = 0.5)
+				data = res.content.decode('utf-8')
+			except:
+				data = '[]'
+			break
+			
 		data = json.loads(data)
 		data = [Transaction.Transaction(x) for x in data]
-		new_time = data[-1].timestamp
-		data = [x for x in data if x.timestamp >= self.last_updated]
+		new_time = self.last_updated
+		if len(data) > 0:
+			new_time = data[-1].timestamp
+		data = [x for x in data if x.timestamp > self.last_updated]
 		self.last_updated = new_time
 		return data
 
